@@ -1,0 +1,63 @@
+# ==========================================
+# 🐍 Python Core & Caches
+# ==========================================
+__pycache__/
+*.py[cod]
+*$py.class
+*.cfg
+.pytest_cache/
+.history/
+
+# ==========================================
+# 📦 Virtual Environments
+# ==========================================
+.venv/
+venv/
+ENV/
+env/
+ENV_DIR/
+
+# ==========================================
+# 🛠️ PyInstaller & Build Outputs
+# ==========================================
+# Blocks the massive temporary working folder
+build/
+
+# Blocks log files generated during assembly
+*.manifest
+*.spec
+*.toc
+warn-*.txt
+
+# OPTIONAL: Un-comment the line below if you want to keep your compiled .exe out of Git entirely.
+# dist/
+
+# ==========================================
+# ⚙️ App Configurations & Credentials
+# ==========================================
+# Prevents sharing your custom system directories publicly
+config.json
+
+# If you implement cryptographic security tokens later
+*.lic
+*.token
+*.key
+*.hash
+
+# ==========================================
+# 🪟 Windows System Garbage
+# ==========================================
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+
+
+# ==========================================
+# 🛠️ PyInstaller & Build Outputs
+# ==========================================
+build/
+dist/          # 👈 Add this line to stop tracking your executable binaries
+*.manifest
+*.spec
+*.toc
