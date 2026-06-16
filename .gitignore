@@ -57,7 +57,7 @@ $RECYCLE.BIN/
 # 🛠️ PyInstaller & Build Outputs
 # ==========================================
 build/
-dist/          # 👈 Add this line to stop tracking your executable binaries
+dist/
 *.manifest
 *.spec
 *.toc
