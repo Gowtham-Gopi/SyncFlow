@@ -64,6 +64,13 @@ def load_config():
                 print("=" * 60)
                 input("Please click enter to exit...")
                 sys.exit(1)
+
+        # Validate configuration values
+        for key in ["source", "destination", "folder_name"]:
+            if key not in config_data:
+                raise ValueError(f"Missing configuration key: '{key}'")
+            if not isinstance(config_data[key], str) or not config_data[key].strip():
+                raise ValueError(f"Configuration key '{key}' must be a non-empty string.")
                 
         return config_data, BASE_DIR
 
@@ -77,6 +84,16 @@ def load_config():
         print("\n👉 A CONFIG TEMPLATE IS CREATED. EDIT THAT FILE TO PROCEED.")
         print("=" * 60)
         input("Press Enter to exit...")
+        sys.exit(1)
+    except ValueError as ve:
+        clear_screen()
+        print("=" * 60)
+        print(" CRITICAL ERROR: INVALID CONFIGURATION ".center(60, "!"))
+        print("=" * 60)
+        print(f"\n❌ Validation failed: {ve}")
+        print("\n👉 Tip: Please correct your 'config.json' layout.")
+        print("=" * 60)
+        input("Please click enter to exit...")
         sys.exit(1)
         
 
@@ -136,16 +153,19 @@ def upload_via_desktop_client():
     for i in source_files:
         full_path = os.path.join(source_folder, i)
 
-        if os.path.isdir(full_path):
+        try:
+            if os.path.isdir(full_path):
+                creation_time = os.path.getctime(full_path)
+                creation_time = datetime.fromtimestamp(creation_time)
 
-            creation_time = os.path.getctime(full_path)
-            creation_time = datetime.fromtimestamp(creation_time)
-
-            if creation_time.date() == today_date:
-                folder_count+=1
-                if latest_folder == "" or latest_creation < creation_time:
-                    latest_creation = creation_time
-                    latest_folder = full_path
+                if creation_time.date() == today_date:
+                    folder_count+=1
+                    if latest_folder == "" or latest_creation < creation_time:
+                        latest_creation = creation_time
+                        latest_folder = full_path
+        except (FileNotFoundError, PermissionError, OSError):
+            # Safe skip if the file/folder gets deleted or inaccessible mid-scan
+            continue
 
 
 
@@ -173,10 +193,14 @@ def upload_via_desktop_client():
         latest_folder_name = os.path.basename(latest_folder)
         compressor.zip_folder(backup_destination, latest_folder, latest_folder_name+timesuffix+".zip")
     except Exception as e:
-        print(f"Error {e}")
+        print(f"\n❌ Backup Failed: {e}")
+        print("=" * 60)
+        sys.exit(1)
+
 
 if __name__ == "__main__":
     # Ensure only a single instance of the utility runs at any time
+    _lock_socket = None
     try:
         _lock_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         _lock_socket.bind(('127.0.0.1', 61999))
@@ -186,5 +210,26 @@ if __name__ == "__main__":
         input("Press any button to exit....")
         sys.exit(1)
 
-    upload_via_desktop_client()
+    try:
+        upload_via_desktop_client()
+    except SystemExit as se:
+        sys.exit(se.code)
+
+    except KeyboardInterrupt:
+        print("\n\n🛑 Operation halted: Emergency user cancellation (Ctrl+C) detected.")
+        print("🧹 Closing background file streams and exiting safely...")
+        # The script will now fall through cleanly to your exit pause
+        print("-" * 60)
+
+    except Exception as e:
+        print(f"\n❌ Unexpected Failure: {e}")
+        print("=" * 60)
+        sys.exit(1)
+    finally:
+        if _lock_socket:
+            try:
+                _lock_socket.close()
+            except Exception:
+                pass
+
     pause = input("Press any button to exit....")
