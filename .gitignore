@@ -61,3 +61,4 @@ dist/
 *.manifest
 *.spec
 *.toc
+test.zip

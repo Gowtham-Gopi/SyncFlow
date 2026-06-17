@@ -1,8 +1,19 @@
 import os
 import sys
 import json
+import re
+import socket
 from datetime import datetime
 import compressor
+
+# Force UTF-8 encoding for standard output and error to support emojis on Windows
+if sys.platform.startswith('win'):
+    try:
+        sys.stdout.reconfigure(encoding='utf-8')
+        sys.stderr.reconfigure(encoding='utf-8')
+    except Exception:
+        pass
+
 
 config_template = {
     "source": "C:/folder/Backups/",
@@ -17,7 +28,7 @@ def clear_screen():
 def create_config(BASE_DIR):
     try:
         config_path = os.path.join(BASE_DIR, "config.json")
-        with open(config_path, "w+") as file:
+        with open(config_path, "w", encoding="utf-8") as file:
             json.dump(config_template, file, indent=4)
     except Exception as e:
         print(f"Error {e}")
@@ -32,8 +43,30 @@ def load_config():
     config_path = os.path.join(BASE_DIR, "config.json")
     
     try:
-        with open(config_path, "r") as f:
-            return json.load(f), BASE_DIR
+        with open(config_path, "r", encoding="utf-8") as f:
+            raw_content = f.read()
+
+        try:
+            config_data = json.loads(raw_content)
+        except json.JSONDecodeError:
+            try:
+                # Fallback: Fix naked Windows backslashes without breaking JSON tokens
+                fixed_content = re.sub(r'\\(?!["\\/bfnrt]|u[0-9a-fA-F]{4})', '/', raw_content)
+                config_data = json.loads(fixed_content)
+            except json.JSONDecodeError as je:
+                clear_screen()
+                print("=" * 60)
+                print(" CRITICAL ERROR: CONFIG.JSON IS MALFORMED ".center(60, "!"))
+                print("=" * 60)
+                print(f"\n❌ Syntax error detected inside config file:")
+                print(f"   {je}")
+                print("\n👉 Tip: Ensure you are using standard quotes and formatting.")
+                print("=" * 60)
+                input("Please click enter to exit...")
+                sys.exit(1)
+                
+        return config_data, BASE_DIR
+
     except FileNotFoundError:
         clear_screen()
         print("=" * 60)
@@ -43,9 +76,9 @@ def load_config():
         create_config(BASE_DIR)
         print("\n👉 A CONFIG TEMPLATE IS CREATED. EDIT THAT FILE TO PROCEED.")
         print("=" * 60)
-        input("\nPress [ENTER] to exit...")
+        input("Press Enter to exit...")
         sys.exit(1)
-
+        
 
 def upload_via_desktop_client():
     config, base_dir = load_config()
@@ -61,10 +94,9 @@ def upload_via_desktop_client():
     source_folder = os.path.normpath(config_source)
 
     if not os.path.exists(os.path.normpath(config_dest)):
-        print("\n❌ Error: Virtual 'G:/My Drive/backups' stream destination not found.")
+        print(f"\n❌ Error: Virtual '{config_dest}' stream destination not found.")
         print("👉 Please make sure Google Drive for Desktop application is actively running.")
         print("=" * 60)
-        input("\nPress [ENTER] to close...")
         return
 
     backup_destination = os.path.normpath(os.path.join(config_dest, folder_name))
@@ -76,7 +108,6 @@ def upload_via_desktop_client():
     if not os.path.exists(source_folder):
         print("\n❌ Error: Source folder does not exist.")
         print("=" * 60)
-        input("\nPress [ENTER] to close...")
         return
 
     # List Todays Backups
@@ -95,7 +126,14 @@ def upload_via_desktop_client():
     latest_folder = ""
     latest_creation = ""
 
-    for i in os.listdir(source_folder):
+    try:
+        source_files = os.listdir(source_folder)
+    except Exception as e:
+        print(f"\n❌ Error: Cannot scan source directory:\n   {e}")
+        print("=" * 60)
+        return
+
+    for i in source_files:
         full_path = os.path.join(source_folder, i)
 
         if os.path.isdir(full_path):
@@ -131,11 +169,22 @@ def upload_via_desktop_client():
         print(f"Latest: {latest_folder_name} at {latest_creation.strftime("%I:%M %p")}\n")
     
     try:
+        timesuffix = datetime.now().strftime("_%H-%M")
         latest_folder_name = os.path.basename(latest_folder)
-        compressor.zip_folder(backup_destination, latest_folder, latest_folder_name+".zip")
+        compressor.zip_folder(backup_destination, latest_folder, latest_folder_name+timesuffix+".zip")
     except Exception as e:
         print(f"Error {e}")
 
 if __name__ == "__main__":
+    # Ensure only a single instance of the utility runs at any time
+    try:
+        _lock_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        _lock_socket.bind(('127.0.0.1', 61999))
+    except socket.error:
+        print("\n⚠️  Error: Another instance of SyncFlow is already running.")
+        print("=" * 60)
+        input("Press any button to exit....")
+        sys.exit(1)
+
     upload_via_desktop_client()
     pause = input("Press any button to exit....")
