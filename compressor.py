@@ -32,7 +32,7 @@ def zip_folder(g_drive_destination, source_folder, output_zip_name):
         with zipfile.ZipFile(final_output_path, 'w', zipfile.ZIP_DEFLATED) as zipf:
             
             # Setup a master progress bar tracking total bytes with dynamic scale (KB/MB/GB)
-            with tqdm(total=total_bytes, desc="⚡ Syncing to Cloud", unit="B", unit_scale=True, unit_divisor=1024, leave=False, ncols=75, file=sys.stdout) as pbar:
+            with tqdm(total=total_bytes, desc="⚡ Syncing to Cloud", unit="B", unit_scale=True, unit_divisor=1024, leave=True, ncols=75, file=sys.stdout) as pbar:
                 
                 # Walk through your target source directory structures
                 for root, dirs, files in os.walk(source_folder):
