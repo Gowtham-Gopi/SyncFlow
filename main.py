@@ -40,7 +40,7 @@ def load_config():
         print(" CRITICAL ERROR: CONFIGURATION MISSING ".center(60, "!"))
         print("=" * 60)
         print(f"\n❌ Cannot find 'config.json' at:\n   {config_path}")
-        create_config()
+        create_config(BASE_DIR)
         print("\n👉 A CONFIG TEMPLATE IS CREATED. EDIT THAT FILE TO PROCEED.")
         print("=" * 60)
         input("\nPress [ENTER] to exit...")
