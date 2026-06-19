@@ -35,6 +35,16 @@ By natively integrating robust validation checks, single-instance execution lock
 
 ---
 
+## 🔒 Licensing & Machine Binding
+
+SyncFlow features an offline, node-locked licensing system designed for high reliability and ease of use:
+- **Hardware-User Binding:** Automatically generates a machine fingerprint using a normalized (lowercase) combination of the local `COMPUTERNAME` and `USERNAME` environment variables.
+- **Zero-Network Dependency:** Runs completely offline, avoiding issues with firewalls, VPNs, or network changes.
+- **Base32 Encoded Keys:** Hashes the fingerprint using SHA-256 and formats it to a readable, case-insensitive 12-character string (e.g., `445D-GN7F-P575`).
+- **Support-Friendly Output:** If the license is missing or invalid, the app displays the computer's **Primary Key** and the entered **License Key** in a clean, formatted style for easy copy-pasting.
+
+---
+
 ## ⚙️ Configuration Setup
 
 Configure SyncFlow by editing the `config.json` file located in the application's root directory:
@@ -43,7 +53,8 @@ Configure SyncFlow by editing the `config.json` file located in the application'
 {
     "source": "C:/Users/gowth/Downloads/Backups",
     "destination": "G:/My Drive",
-    "folder_name": "Backups"
+    "folder_name": "Backups",
+    "key": "XXXX-XXXX-XXXX"
 }
 ```
 
@@ -53,6 +64,7 @@ Configure SyncFlow by editing the `config.json` file located in the application'
 | `source` | `String` | The local parent folder containing ERP generated backups. |
 | `destination` | `String` | Path to Google Drive for Desktop virtual mount (e.g. `G:/My Drive`). |
 | `folder_name` | `String` | Subdirectory inside the destination where backup archives will be stored. |
+| `key` | `String` | The 12-character license key issued by support (e.g., `XXXX-XXXX-XXXX`). |
 
 ---
 

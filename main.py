@@ -5,6 +5,7 @@ import re
 import socket
 from datetime import datetime
 import compressor
+import licenseAuth
 
 # Force UTF-8 encoding for standard output and error to support emojis on Windows
 if sys.platform.startswith('win'):
@@ -18,7 +19,8 @@ if sys.platform.startswith('win'):
 config_template = {
     "source": "C:/folder/Backups/",
     "destination": "G:/My Drive/",
-    "folder_name": "Backups"
+    "folder_name": "Backups",
+    "key": "XXXXXXXXXXXXXXXX"
 }
 
 def clear_screen():
@@ -66,7 +68,7 @@ def load_config():
                 sys.exit(1)
 
         # Validate configuration values
-        for key in ["source", "destination", "folder_name"]:
+        for key in ["source", "destination", "folder_name", "key"]:
             if key not in config_data:
                 raise ValueError(f"Missing configuration key: '{key}'")
             if not isinstance(config_data[key], str) or not config_data[key].strip():
@@ -99,14 +101,24 @@ def load_config():
 
 def upload_via_desktop_client():
     config, base_dir = load_config()
-    
-    # source_folder = config["source"]
-    # g_drive_path = config["destination"]
-    # folder_name = config["folder_name"]
 
-    config_source = config.get("source")       # "C:/Users/gowth/Downloads/Backups"
-    config_dest = config.get("destination")    # "G:/My Drive"
-    folder_name = config.get("folder_name")    # "Backups"
+    config_source = config.get("source")
+    config_dest = config.get("destination")
+    folder_name = config.get("folder_name")    
+    licenseKey = str(config.get("key")).replace("-","").strip().upper()
+
+    if not licenseAuth.verifyHash(licenseKey):
+        primaryKey = licenseAuth.getPrimary()
+        if len(primaryKey) == 12 and len(licenseKey) == 12:
+            print("PRIMARY-KEY: ", f"{primaryKey[0:4]}-{primaryKey[4:8]}-{primaryKey[8:12]}")
+            print("LICENSE-KEY: ", f"{licenseKey[0:4]}-{licenseKey[4:8]}-{licenseKey[8:12]}")
+        else:
+            print("PRIMARY-KEY: ", primaryKey)
+            print("LICENSE-KEY: ", licenseKey)
+
+        print("\n❌ Error: INVALID LICENSE KEY. PLEASE CONTACT SUPPORT.")
+        print("=" * 60)
+        return
 
     source_folder = os.path.normpath(config_source)
 

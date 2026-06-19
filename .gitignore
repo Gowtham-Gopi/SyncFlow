@@ -59,6 +59,5 @@ $RECYCLE.BIN/
 build/
 dist/
 *.manifest
-*.spec
 *.toc
 test.zip
