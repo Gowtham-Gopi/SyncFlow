@@ -20,7 +20,7 @@ config_template = {
     "source": "C:/folder/Backups/",
     "destination": "G:/My Drive/",
     "folder_name": "Backups",
-    "key": "XXXXXXXXXXXXXXXX"
+    "key": "XXXXXXXXXXXX"
 }
 
 def clear_screen():
